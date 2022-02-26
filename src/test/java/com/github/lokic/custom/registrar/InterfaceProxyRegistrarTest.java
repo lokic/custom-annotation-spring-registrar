@@ -1,6 +1,6 @@
 package com.github.lokic.custom.registrar;
 
-import com.github.lokic.custom.registrar.component.TestServiceRegistrar;
+import com.github.lokic.custom.registrar.impl.TestServiceRegistrar;
 import com.github.lokic.custom.registrar.service.UserService;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;

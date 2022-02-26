@@ -1,4 +1,4 @@
-package com.github.lokic.custom.registrar.component;
+package com.github.lokic.custom.registrar.impl;
 
 import com.github.lokic.custom.registrar.InterfaceProxy;
 import com.github.lokic.custom.registrar.InvocationHandlerProxy;
