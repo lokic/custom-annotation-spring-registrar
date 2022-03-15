@@ -1,6 +1,6 @@
 package com.github.lokic.custom.registrar.impl;
 
-import com.github.lokic.custom.registrar.InterfaceProxy;
+import com.github.lokic.custom.registrar.InterfaceFactory;
 import com.github.lokic.custom.registrar.InterfaceRegistrar;
 import com.github.lokic.custom.registrar.annotiation.TestService;
 
@@ -14,7 +14,7 @@ public class TestServiceRegistrar extends InterfaceRegistrar {
     }
 
     @Override
-    protected Class<? extends InterfaceProxy> getFactoryBeanType() {
-        return TestServiceProxy.class;
+    protected Class<? extends InterfaceFactory> getFactoryBeanType() {
+        return TestServiceFactory.class;
     }
 }

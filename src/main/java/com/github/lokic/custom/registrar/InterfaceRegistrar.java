@@ -10,10 +10,14 @@ public abstract class InterfaceRegistrar implements ImportBeanDefinitionRegistra
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
-        Scanner.doScan(getFactoryBeanType(), annotationMetadata, registry, getAnnotationType());
+        Scanner.doScan(getEnableAnnotationType(), getFactoryBeanType(), annotationMetadata, registry, getAnnotationType());
+    }
+
+    protected Class<? extends Annotation> getEnableAnnotationType() {
+        return EnableCustomAnnotation.class;
     }
 
     protected abstract Class<? extends Annotation> getAnnotationType();
 
-    protected abstract Class<? extends InterfaceProxy> getFactoryBeanType();
+    protected abstract Class<? extends InterfaceFactory> getFactoryBeanType();
 }

@@ -2,6 +2,7 @@ package com.github.lokic.custom.registrar;
 
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -16,35 +18,35 @@ import java.util.stream.Collectors;
 
 public abstract class Scanner extends ClassPathBeanDefinitionScanner {
 
-    private static final String DEFAULT_BASE_PACKAGES_NAME = "basePackages";
+    private static final String DEFAULT_BASE_PACKAGES_ATTRIBUTE_NAME = "basePackages";
 
-    private final Class<? extends InterfaceProxy> factoryBeanType;
+    private final Class<? extends InterfaceFactory> factoryBeanType;
+
+    private final String[] basePackages;
+
 
     @SafeVarargs
-    public static Scanner doScan(Class<? extends InterfaceProxy> factoryBean, AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry, Class<? extends Annotation>... customIncludeFilters) {
-        Scanner scanner = new Scanner(factoryBean, registry) {
+    public static Scanner doScan(Class<? extends Annotation> enableAnnotationType, Class<? extends InterfaceFactory> factoryBean, AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry, Class<? extends Annotation>... customIncludeFilters) {
+        Scanner scanner = new Scanner(enableAnnotationType, factoryBean, registry, annotationMetadata) {
             @Override
             List<Class<? extends Annotation>> getCustomIncludeFilters() {
                 return Arrays.stream(customIncludeFilters).collect(Collectors.toList());
             }
         };
-        Set<String> basePackages = getBasePackages(annotationMetadata);
-        scanner.doScan(basePackages.toArray(new String[0]));
+        scanner.doScan();
         return scanner;
     }
 
 
-    Scanner(Class<? extends InterfaceProxy> factoryBeanType, BeanDefinitionRegistry registry) {
+    Scanner(Class<? extends Annotation> enableAnnotationType, Class<? extends InterfaceFactory> factoryBeanType, BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata) {
         super(registry);
+        this.basePackages = getBasePackages(enableAnnotationType, annotationMetadata).toArray(new String[0]);
         this.factoryBeanType = factoryBeanType;
     }
 
-    @Override
-    protected void registerDefaultFilters() {
-        addIncludeFilters(getCustomIncludeFilters());
+    private Set<BeanDefinitionHolder> doScan() {
+        return doScan(basePackages);
     }
-
-    abstract List<Class<? extends Annotation>> getCustomIncludeFilters();
 
     final void addIncludeFilters(List<Class<? extends Annotation>> annotationTypes) {
         for (Class<? extends Annotation> annotationType : annotationTypes) {
@@ -52,6 +54,23 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
         }
     }
 
+    @Override
+    protected void registerDefaultFilters() {
+        addIncludeFilters(getCustomIncludeFilters());
+    }
+
+    protected String getBasePackagesAttributeName() {
+        return DEFAULT_BASE_PACKAGES_ATTRIBUTE_NAME;
+    }
+
+    public Set<BeanDefinition> findCandidateComponents() {
+        return Arrays.stream(basePackages)
+                .map(this::findCandidateComponents)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    abstract List<Class<? extends Annotation>> getCustomIncludeFilters();
 
     @SneakyThrows
     @Override
@@ -76,12 +95,17 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
     /**
      * 获取basePackages
      */
-    private static Set<String> getBasePackages(AnnotationMetadata annotationMetadata) {
-        Map<String, Object> attributes = getAnnotationAttributes(annotationMetadata);
-        if (attributes.containsKey(DEFAULT_BASE_PACKAGES_NAME)) {
-            Object basePackages = attributes.get(DEFAULT_BASE_PACKAGES_NAME);
-            if (basePackages.getClass() == String[].class) {
-                return Arrays.stream((String[]) basePackages).collect(Collectors.toSet());
+    private Set<String> getBasePackages(Class<? extends Annotation> enableAnnotationType, AnnotationMetadata annotationMetadata) {
+        if (enableAnnotationType != null) {
+            Map<String, Object> attributes = getAnnotationAttributes(enableAnnotationType, annotationMetadata);
+            if (attributes.containsKey(getBasePackagesAttributeName())) {
+                Object basePackages = attributes.get(getBasePackagesAttributeName());
+                if (basePackages.getClass() == String[].class) {
+                    Set<String> packages = Arrays.stream((String[]) basePackages).collect(Collectors.toSet());
+                    if (!CollectionUtils.isEmpty(packages)) {
+                        return packages;
+                    }
+                }
             }
         }
         Set<String> basePackages = new HashSet<>();
@@ -90,8 +114,8 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
         return basePackages;
     }
 
-    private static Map<String, Object> getAnnotationAttributes(AnnotationMetadata importingClassMetadata) {
-        return Optional.ofNullable(importingClassMetadata.getAnnotationAttributes(importingClassMetadata.getClassName()))
+    private Map<String, Object> getAnnotationAttributes(Class<? extends Annotation> enableAnnotationType, AnnotationMetadata importingClassMetadata) {
+        return Optional.ofNullable(importingClassMetadata.getAnnotationAttributes(enableAnnotationType.getName()))
                 .orElseGet(HashMap::new);
     }
 

@@ -4,7 +4,7 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.InvocationHandler;
 import org.springframework.cglib.proxy.Proxy;
 
-public interface InvocationHandlerProxy extends ObjectFactory, InvocationHandler {
+public interface InvocationHandlerProxy extends ProxyFactory, InvocationHandler {
 
     default Object getObject(Class<?> clazz) {
         if (clazz.isInterface()) {

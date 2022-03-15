@@ -3,11 +3,11 @@ package com.github.lokic.custom.registrar;
 import lombok.NonNull;
 import org.springframework.beans.factory.FactoryBean;
 
-public abstract class InterfaceProxy implements ObjectFactory, FactoryBean<Object> {
+public abstract class InterfaceFactory implements ProxyFactory, FactoryBean<Object> {
 
     private final Class<?> innerClass;
 
-    public InterfaceProxy(@NonNull Class<?> innerClass) {
+    public InterfaceFactory(@NonNull Class<?> innerClass) {
         this.innerClass = innerClass;
     }
 
