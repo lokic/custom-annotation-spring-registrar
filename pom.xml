@@ -8,6 +8,22 @@
 
     <name>custom-annotation-spring-registrar</name>
     <description>custom-annotation-spring-registrar</description>
+    <url>https://github.com/lokic/custom-annotation-spring-registrar</url>
+
+    <developers>
+        <developer>
+            <name>lokic</name>
+            <email>kiraconan2046@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/lokic/custom-annotation-spring-registrar</url>
+        <connection>scm:git:https://github.com/lokic/custom-annotation-spring-registrar.git</connection>
+        <developerConnection>scm:git:https://github.com/lokic/custom-annotation-spring-registrar.git
+        </developerConnection>
+    </scm>
+
     <properties>
         <java.version>1.8</java.version>
         <spring-boot.version>1.5.6.RELEASE</spring-boot.version>
@@ -60,6 +76,19 @@
                         <id>attach-sources</id>
                         <goals>
                             <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
