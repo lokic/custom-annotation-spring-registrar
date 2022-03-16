@@ -20,17 +20,29 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
 
     private static final String DEFAULT_BASE_PACKAGES_ATTRIBUTE_NAME = "basePackages";
 
-    private final Class<? extends InterfaceFactory> factoryBeanType;
-
     private final String[] basePackages;
 
 
     @SafeVarargs
-    public static Scanner doScan(Class<? extends Annotation> enableAnnotationType, Class<? extends InterfaceFactory> factoryBean, AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry, Class<? extends Annotation>... customIncludeFilters) {
-        Scanner scanner = new Scanner(enableAnnotationType, factoryBean, registry, annotationMetadata) {
+    public static Scanner doScan(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry, Class<? extends Annotation> enableAnnotationType, Class<? extends ProxyFactoryBean> factoryBeanType, Class<? extends Annotation>... customIncludeFilters) {
+        Scanner scanner = new Scanner(annotationMetadata, registry, enableAnnotationType) {
             @Override
-            List<Class<? extends Annotation>> getCustomIncludeFilters() {
+            protected List<Class<? extends Annotation>> getCustomIncludeFilters() {
                 return Arrays.stream(customIncludeFilters).collect(Collectors.toList());
+            }
+
+            @SneakyThrows
+            @Override
+            public Set<BeanDefinitionHolder> doScan(String... basePackages) {
+                Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
+                for (BeanDefinitionHolder holder : beanDefinitions) {
+                    GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
+                    definition.getConstructorArgumentValues()
+                            .addIndexedArgumentValue(0, Class.forName(definition.getBeanClassName()));
+                    definition.setBeanClass(factoryBeanType);
+                    definition.setLenientConstructorResolution(true);
+                }
+                return beanDefinitions;
             }
         };
         scanner.doScan();
@@ -38,15 +50,11 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
     }
 
 
-    Scanner(Class<? extends Annotation> enableAnnotationType, Class<? extends InterfaceFactory> factoryBeanType, BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata) {
+    protected Scanner(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry, Class<? extends Annotation> enableAnnotationType) {
         super(registry);
-        this.basePackages = getBasePackages(enableAnnotationType, annotationMetadata).toArray(new String[0]);
-        this.factoryBeanType = factoryBeanType;
+        this.basePackages = getBasePackages(annotationMetadata, enableAnnotationType).toArray(new String[0]);
     }
 
-    private Set<BeanDefinitionHolder> doScan() {
-        return doScan(basePackages);
-    }
 
     final void addIncludeFilters(List<Class<? extends Annotation>> annotationTypes) {
         for (Class<? extends Annotation> annotationType : annotationTypes) {
@@ -63,6 +71,12 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
         return DEFAULT_BASE_PACKAGES_ATTRIBUTE_NAME;
     }
 
+    protected abstract List<Class<? extends Annotation>> getCustomIncludeFilters();
+
+    public Set<BeanDefinitionHolder> doScan() {
+        return doScan(basePackages);
+    }
+
     public Set<BeanDefinition> findCandidateComponents() {
         return Arrays.stream(basePackages)
                 .map(this::findCandidateComponents)
@@ -70,34 +84,18 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
                 .collect(Collectors.toSet());
     }
 
-    abstract List<Class<? extends Annotation>> getCustomIncludeFilters();
-
-    @SneakyThrows
-    @Override
-    public Set<BeanDefinitionHolder> doScan(String... basePackages) {
-        Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
-        for (BeanDefinitionHolder holder : beanDefinitions) {
-            GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
-            definition.getConstructorArgumentValues()
-                    .addIndexedArgumentValue(0, Class.forName(definition.getBeanClassName()));
-            definition.setBeanClass(factoryBeanType);
-        }
-        return beanDefinitions;
-    }
-
     @Override
     public boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
-        return beanDefinition.getMetadata().isInterface() &&
-                getCustomIncludeFilters().stream().anyMatch(clazz -> beanDefinition.getMetadata().hasAnnotation(clazz.getName()));
+        return getCustomIncludeFilters().stream().anyMatch(clazz -> beanDefinition.getMetadata().hasAnnotation(clazz.getName()));
     }
 
 
     /**
      * 获取basePackages
      */
-    private Set<String> getBasePackages(Class<? extends Annotation> enableAnnotationType, AnnotationMetadata annotationMetadata) {
+    private Set<String> getBasePackages(AnnotationMetadata annotationMetadata, Class<? extends Annotation> enableAnnotationType) {
         if (enableAnnotationType != null) {
-            Map<String, Object> attributes = getAnnotationAttributes(enableAnnotationType, annotationMetadata);
+            Map<String, Object> attributes = AnnotationAttributeUtils.getAnnotationAttributes(annotationMetadata, enableAnnotationType);
             if (attributes.containsKey(getBasePackagesAttributeName())) {
                 Object basePackages = attributes.get(getBasePackagesAttributeName());
                 if (basePackages.getClass() == String[].class) {
@@ -113,12 +111,6 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
                 ClassUtils.getPackageName(annotationMetadata.getClassName()));
         return basePackages;
     }
-
-    private Map<String, Object> getAnnotationAttributes(Class<? extends Annotation> enableAnnotationType, AnnotationMetadata importingClassMetadata) {
-        return Optional.ofNullable(importingClassMetadata.getAnnotationAttributes(enableAnnotationType.getName()))
-                .orElseGet(HashMap::new);
-    }
-
 
 }
 

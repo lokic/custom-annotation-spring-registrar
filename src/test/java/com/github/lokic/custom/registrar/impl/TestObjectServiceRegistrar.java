@@ -2,19 +2,18 @@ package com.github.lokic.custom.registrar.impl;
 
 import com.github.lokic.custom.registrar.ProxyFactoryBean;
 import com.github.lokic.custom.registrar.ProxyRegistrar;
-import com.github.lokic.custom.registrar.annotiation.TestService;
+import com.github.lokic.custom.registrar.annotiation.TestObjectService;
 
 import java.lang.annotation.Annotation;
 
-public class TestServiceRegistrar extends ProxyRegistrar {
-
+public class TestObjectServiceRegistrar extends ProxyRegistrar {
     @Override
     protected Class<? extends Annotation> getAnnotationType() {
-        return TestService.class;
+        return TestObjectService.class;
     }
 
     @Override
     protected Class<? extends ProxyFactoryBean> getFactoryBeanType() {
-        return TestServiceFactoryBean.class;
+        return TestObjectServiceFactoryBean.class;
     }
 }

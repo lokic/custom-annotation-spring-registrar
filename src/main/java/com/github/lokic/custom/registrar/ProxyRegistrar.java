@@ -6,11 +6,11 @@ import org.springframework.core.type.AnnotationMetadata;
 
 import java.lang.annotation.Annotation;
 
-public abstract class InterfaceRegistrar implements ImportBeanDefinitionRegistrar {
+public abstract class ProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
-        Scanner.doScan(getEnableAnnotationType(), getFactoryBeanType(), annotationMetadata, registry, getAnnotationType());
+        Scanner.doScan(annotationMetadata, registry, getEnableAnnotationType(), getFactoryBeanType(), getAnnotationType());
     }
 
     protected Class<? extends Annotation> getEnableAnnotationType() {
@@ -19,5 +19,5 @@ public abstract class InterfaceRegistrar implements ImportBeanDefinitionRegistra
 
     protected abstract Class<? extends Annotation> getAnnotationType();
 
-    protected abstract Class<? extends InterfaceFactory> getFactoryBeanType();
+    protected abstract Class<? extends ProxyFactoryBean> getFactoryBeanType();
 }

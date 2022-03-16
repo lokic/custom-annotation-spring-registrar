@@ -1,19 +1,19 @@
 package com.github.lokic.custom.registrar.impl;
 
-import com.github.lokic.custom.registrar.InterfaceFactory;
 import com.github.lokic.custom.registrar.InvocationHandlerProxy;
+import com.github.lokic.custom.registrar.ProxyFactoryBean;
 import com.github.lokic.custom.registrar.service.RealService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.Method;
 
-public class TestServiceFactory extends InterfaceFactory implements InvocationHandlerProxy {
+public class TestServiceFactoryBean extends ProxyFactoryBean implements InvocationHandlerProxy {
 
     @Autowired
     private RealService realService;
 
-    public TestServiceFactory(@NonNull Class<?> innerClass) {
+    public TestServiceFactoryBean(@NonNull Class<?> innerClass) {
         super(innerClass);
     }
 

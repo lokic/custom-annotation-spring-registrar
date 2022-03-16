@@ -14,7 +14,7 @@ public class CustomAnnotationSelector implements ImportSelector {
     public String[] selectImports(AnnotationMetadata importingClassMetadata) {
         Map<String, Object> attrs = importingClassMetadata.getAnnotationAttributes(EnableCustomAnnotation.class.getName());
         @SuppressWarnings("unchecked")
-        Class<? extends InterfaceRegistrar>[] registrarTypes = (Class<? extends InterfaceRegistrar>[]) attrs.get(REGISTRAR_TYPES_ATTRIBUTE_NAME);
+        Class<? extends ProxyRegistrar>[] registrarTypes = (Class<? extends ProxyRegistrar>[]) attrs.get(REGISTRAR_TYPES_ATTRIBUTE_NAME);
         return Arrays.stream(registrarTypes).map(Class::getName).toArray(String[]::new);
     }
 }
