@@ -10,14 +10,14 @@ public abstract class ProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
-        Scanner.doScan(annotationMetadata, registry, getEnableAnnotationType(), getFactoryBeanType(), getAnnotationType());
+        Scanner.doScan(annotationMetadata, registry, getEnableAnnotationType(), getFactoryBeanType(), getClassAnnotationType());
     }
 
     protected Class<? extends Annotation> getEnableAnnotationType() {
         return EnableCustomAnnotation.class;
     }
 
-    protected abstract Class<? extends Annotation> getAnnotationType();
+    protected abstract Class<? extends Annotation> getClassAnnotationType();
 
     protected abstract Class<? extends ProxyFactoryBean> getFactoryBeanType();
 }

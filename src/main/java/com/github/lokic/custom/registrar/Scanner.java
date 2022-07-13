@@ -25,6 +25,9 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
 
     @SafeVarargs
     public static Scanner doScan(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry, Class<? extends Annotation> enableAnnotationType, Class<? extends ProxyFactoryBean> factoryBeanType, Class<? extends Annotation>... customIncludeFilters) {
+        Objects.requireNonNull(enableAnnotationType);
+        Objects.requireNonNull(factoryBeanType);
+
         Scanner scanner = new Scanner(annotationMetadata, registry, enableAnnotationType) {
             @Override
             protected List<Class<? extends Annotation>> getCustomIncludeFilters() {
@@ -37,8 +40,10 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
                 Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
                 for (BeanDefinitionHolder holder : beanDefinitions) {
                     GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
-                    definition.getConstructorArgumentValues()
-                            .addIndexedArgumentValue(0, Class.forName(definition.getBeanClassName()));
+                    Class<?> beanClass = definition.hasBeanClass()
+                            ? definition.getBeanClass()
+                            : definition.resolveBeanClass(null);
+                    definition.getConstructorArgumentValues().addIndexedArgumentValue(0, beanClass);
                     definition.setBeanClass(factoryBeanType);
                     definition.setLenientConstructorResolution(true);
                 }
@@ -78,10 +83,7 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
     }
 
     public Set<BeanDefinition> findCandidateComponents() {
-        return Arrays.stream(basePackages)
-                .map(this::findCandidateComponents)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+        return Arrays.stream(basePackages).map(this::findCandidateComponents).flatMap(Collection::stream).collect(Collectors.toSet());
     }
 
     @Override
@@ -107,8 +109,7 @@ public abstract class Scanner extends ClassPathBeanDefinitionScanner {
             }
         }
         Set<String> basePackages = new HashSet<>();
-        basePackages.add(
-                ClassUtils.getPackageName(annotationMetadata.getClassName()));
+        basePackages.add(ClassUtils.getPackageName(annotationMetadata.getClassName()));
         return basePackages;
     }
 

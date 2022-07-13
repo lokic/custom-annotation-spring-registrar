@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 
 public class TestObjectServiceRegistrar extends ProxyRegistrar {
     @Override
-    protected Class<? extends Annotation> getAnnotationType() {
+    protected Class<? extends Annotation> getClassAnnotationType() {
         return TestObjectService.class;
     }
 

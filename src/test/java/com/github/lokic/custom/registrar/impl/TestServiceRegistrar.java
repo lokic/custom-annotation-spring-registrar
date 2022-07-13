@@ -9,7 +9,7 @@ import java.lang.annotation.Annotation;
 public class TestServiceRegistrar extends ProxyRegistrar {
 
     @Override
-    protected Class<? extends Annotation> getAnnotationType() {
+    protected Class<? extends Annotation> getClassAnnotationType() {
         return TestService.class;
     }
 
